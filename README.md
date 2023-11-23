@@ -1,93 +1,369 @@
-# Snippets
+# Documentation
 
+This repository contains snippets used across our portfolio
 
+The format for snippets is markdown to be able to easily edit and also to have nice readable format.
 
-## Getting started
+`README.md` contain helpers with something specific across all the projects, it is language agnostic.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+There are also language specific references - helpers for particular languages.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+If you edit some headings, do not forget to update table of contents in JetBrains - just show Quick fixes and do Update table...
 
-## Add your files
+## TOC
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+<!-- TOC -->
+* [Documentation](#documentation)
+    * [TOC](#toc)
+    * [OS](#os)
+        * [Linux](#linux)
+            * [Essentials](#essentials)
+            * [Do after every fresh install](#do-after-every-fresh-install)
+    * [Terminals](#terminals)
+        * [Linux](#linux-1)
+            * [Bash](#bash)
+        * [Windows](#windows)
+            * [PowerShell](#powershell)
+            * [Cmd](#cmd)
+    * [Git](#git)
+        * [Glossary](#glossary)
+        * [Essentials](#essentials-1)
+        * [Misc](#misc)
+        * [.gitignore](#gitignore)
+        * [Git hooks](#git-hooks)
+    * [Docker](#docker)
+        * [Installation](#installation)
+        * [Commands](#commands)
+        * [DOCKERFILE](#dockerfile)
+    * [Misc](#misc-1)
+        * [LDAP](#ldap)
+<!-- TOC -->
 
+## OS
+### Linux
+#### Essentials
+
+```shell
+# Update all packages
+sudo apt-get update
+
+# Upgrade all packages
+sudo apt-get update
+
+# Install package
+sudo apt-get install python3.5-dev
 ```
-cd existing_repo
-git remote add origin https://code.exaas.bosch.com/budwise/snippets.git
-git branch -M main
-git push -uf origin main
+
+Run on bash startup - `~/.bashrc`
+Run on every startup - `~/.profile`
+
+TODO add folders description, fstab description etc.
+
+#### Do after every fresh install
+
+```shell
+# Install all building compilers (g++ error etc...)
+sudo apt-get install build-essential
 ```
 
-## Integrate with your tools
+## Terminals
 
-- [ ] [Set up project integrations](https://code.exaas.bosch.com/budwise/snippets/-/settings/integrations)
+### Linux
 
-## Collaborate with your team
+```bash
+ls  # Print files and dirs from current folder 
+ls -a # Also prints hidden files
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+tree  # Prints also nested dirs and folders in tree structure
 
-## Test and Deploy
+env  # List environment variables
 
-Use the built-in continuous integration in GitLab.
+which python  # Print where command binaries are located
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+cat  # Print file content to console
+cat test >> test1  # Append the content of a file to different file
+cat test > test1  # Overwrite content of file with other file
 
-***
+# Searching, find and replace, insertion or deletion without opening file
+# The below simple sed command replaces the word “unix” with “linux” in the file.
+sed 's/unix/linux/' geekfile.txt
+```
 
-# Editing this README
+#### Bash
+Restart terminal
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+    bash --login
 
-## Suggestions for a good README
+### Windows
+Open bat script and see result in terminal (keeping output after finishing script)
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+    cmd /k my_script.bat
 
-## Name
-Choose a self-explaining name for your project.
+**netstat**
+count number of localhost connections
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+    netstat -n | findstr 127.0.0.1 | find /v /c ""
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+#### PowerShell
+**Filter strings**
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+	echo $Env:PATH | Select-String  substring
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Inverse filter
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+    echo $Env:PATH | Select-String substring -NotMatch
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+**Print content**
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+	Get-Content file
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+**Print env var**
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+	echo $Env:PATH
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+#### Cmd
 
-## License
-For open source projects, say how it is licensed.
+Where command binaries are located
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+    where python
+
+## Git
+
+### Glossary
+- origin - Remote url shorthand
+- merge - Add changes from some branch into another in new commit
+- rebase - Add changes from some branch via changing history (no new commit) !!!Use only when only you are using the branch. If already on remote, need force push!!!
+- fast-forward - It's possible to do merge without new commit (only possible if there are no changes on the other branch)
+
+### Essentials
+```bash
+    # Create .git folder
+    git init
+
+    # Stage all
+    git stage -A
+
+    # Commit all
+    git commit -a -m "new message"
+
+    git remote add origin www.github...repo-path
+
+  # Download existing repo
+
+    git clone repo-url
+
+    # Configuration
+
+    git config --global user.name "Your name"
+    git config --global user.email "yourname@provider.com"
+
+    # Print what is changed
+    git status
+
+    # Stage
+    git add add.js
+
+    # Reset to commit and keep changes in code in stage
+    git reset --soft 852309
+
+    # Reset 5 commits back
+    git reset --soft 'HEAD{5}'
+
+    # Reset to commit and delete changes
+    git reset --hard 852309
+
+    # Create branch
+    git branch dev
+
+    # Move to branch
+    git checkout dev
+
+    # Merge branches (if join master with dev branch, first checkout back to master then)
+    git merge dev
+
+    # Delete branch locally
+    git branch -d dev
+
+    # Delete branch remotely
+    git push --delete origin dev
+```
+
+### Misc
+
+**Clean all history (create, stage, commit, push)**
+
+Delete `.git` folder and
+
+```bash
+git init
+git add .
+git commit -m "Removed history, due to sensitive data"
+git remote add origin github.com:your-project/your-repo.git
+git push -u --force origin master
+```
+
+**How to contribute on gitHub**
+
+Create fork in GitHub, clone forked repository, add upstream with
+
+    git remote add upstream original-repo-url
+
+Update upstream repo in your IDE, create new branch, push changes to the fork, then create pull request in GitHub, resolve comments and if it's accepted, delete branch from local repo.
+
+**Delete last commit**
+
+    git reset --hard <commit-id>
+    git push origin -f
+
+
+**Delete tag**
+
+```bash
+# Locally
+git tag -d v1.0
+
+# Remote
+git push --delete origin tagname
+```
+
+### .gitignore
+
+Create file called `.gitignore` on root. Only code is supposed to be on git. No binaries, libraries etc.
+You can define what files will be sent to git and what files will be ignored
+
+```gitignore
+    # Comments must begin on new line !!!
+
+    # Ignore one file
+    readme.txt
+
+    # Ignore only in current folder
+    /readme.txt
+
+    # Ignore folder
+    output/
+
+    # ignore all *java files
+    *.java
+
+    # All files in directory
+    abc/**
+
+    # Zero or more directories
+    a/**/b
+
+    # Do not ignore
+    !readme.txt
+```
+
+### Git hooks
+
+First setup hooks path, because normal hooks are gitignored by default
+
+    git config core.hooksPath git_hooks_path
+
+
+## Docker
+### Installation
+
+Install on linux [tutorial](https://docs.docker.com/engine/install/ubuntu/)
+Install on windows [tutorial](https://docs.docker.com/docker-for-windows/install/)
+
+### Commands
+**Build**
+
+    docker build -f /path/to/a/Dockerfile .
+
+        -f - Point to dockerfile if not in current folder
+        -t - Add tag
+        -o - Output destination
+
+**Run**
+
+    docker run -d -p 80:80 docker/getting-started
+    
+        -d -  Run in the background
+        -p 80:80 - Map port 80 of the host to port 80 in the container
+        docker/getting-started - Image to use
+    
+        -i - Keep STDIN open even if not attached
+        --expose - Expose a port or a range of ports
+        -h - Container host name
+
+**Download image**
+
+    docker pull alpine
+
+**Misc**
+```shell
+# List all your containrers
+docker ps
+
+# Remove container with it's id from docker ps
+docker rm a39c259df46
+
+# List all images
+docker images
+
+# List all running container
+docker container ls
+
+# Delete image
+docker rmi 60959f29de3a
+
+# Example - run linux
+docker run --interactive --tty ubuntu bash
+# Then you can use host, ls...
+
+# Example 2 = nginx
+docker run --detach --publish 80:80 --name webserver nginx
+# If open http://localhost in browser, you see nginx welcome
+
+# Stop container
+docker container stop webserver
+````
+
+### DOCKERFILE
+
+```dockerfile
+    # This is comment ignored by docker.  # Inline comment also possible
+
+    FROM - Starting container <image>[:tag]. E.g alpine:3.4,
+    RUN - Run command such as apt-get install or pip install
+
+    # Combine RUNs into one
+        RUN apk update && \
+            apk add curl && \
+            apk add vim && \
+    ENV PG_MAJOR=9.3  # Add environment variable
+    EXPOSE 80/tcp # Allow to access this port
+    CMD - Run this script after docker run
+    ENTRYPOINT - Similar to CMD - run this script after docker run - If user should not change the script (arguments)
+
+    COPY - (Preferred) Add directories/files to your image
+    ADD - Add directories/files to your image
+```
+
+## Misc
+### LDAP
+```python
+from ldap3 import Server, Connection, SAFE_SYNC
+
+server = Server('rb-gc-lb.bosch.com', port=3268)
+conn = Connection(server, 'psx6fe@bosch.com', '!nPm?XyS2NowX2', client_strategy=SAFE_SYNC, auto_bind=True, auto_referrals=False)
+
+# In search function, there are two important positional params.
+# First define space to return the results and second means filter, that is applied on searched results
+# Find Group by CN
+status, result, response, _ = conn.search('DC=bosch,DC=com', '(CN=Bj_PS_dux_streaming_c-schicht_editor)')
+
+# Find user
+status, result, response, _ = conn.search('DC=bosch,DC=com', '(sAMAccountName=psx6fe)')
+
+# Find type of records e.g. user
+status, result, response, _ = conn.search('DC=bosch,DC=com', '(Objectclass=User)')
+
+# Using wildcard to get all the records
+status, result, response, _ = conn.search('DC=bosch,DC=com', '(sAMAccountName=*)')
+```
