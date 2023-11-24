@@ -94,6 +94,24 @@ Restart terminal
 
     bash --login
 
+Execute file
+
+    . path
+
+Get DNS server address
+
+    nmcli dev show | grep 'IP4.DNS'
+
+Resolve IP address of domain name
+
+    dig @<DNS_server_IP_address> google.com +short
+
+#### Azure cli
+
+Get access token
+
+    az account get-access-token
+
 ### Windows
 Open bat script and see result in terminal (keeping output after finishing script)
 
