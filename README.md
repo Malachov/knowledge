@@ -8,7 +8,10 @@ The format for snippets is markdown to be able to easily edit and also to have n
 
 There are also language specific references - helpers for particular languages.
 
-If you edit some headings, do not forget to update table of contents in JetBrains - just show Quick fixes and do Update table...
+
+When you are contributing, there are two possible ways. For adding new snippets, put it directly to main. If you want to
+change the structure, create feature branch and merge request to main. If you edit some headings, do not forget to 
+update table of contents in JetBrains - just show Quick fixes and do Update table...
 
 ## TOC
 
@@ -220,6 +223,10 @@ git commit -m "Removed history, due to sensitive data"
 git remote add origin github.com:your-project/your-repo.git
 git push -u --force origin master
 ```
+
+**`.gitignore` seems to have no effect**
+
+    git rm --cached spark-warehouse/ -r -f
 
 **How to contribute on gitHub**
 
