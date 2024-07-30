@@ -8,14 +8,16 @@ The format for snippets is markdown to be able to easily edit and also to have n
 
 There are also language specific references - helpers for particular languages.
 
-
-When you are contributing, there are two possible ways. For adding new snippets, put it directly to main. If you want to
-change the structure, create feature branch and merge request to main. If you edit some headings, do not forget to 
+When you are contributing, there are two possible ways. For adding new snippets, put it directly to main. If
+you want to
+change the structure, create feature branch and merge request to main. If you edit some headings, do not
+forget to
 update table of contents in JetBrains - just show Quick fixes and do Update table...
 
 ## TOC
 
 <!-- TOC -->
+
 * [Documentation](#documentation)
     * [TOC](#toc)
     * [OS](#os)
@@ -40,10 +42,13 @@ update table of contents in JetBrains - just show Quick fixes and do Update tabl
         * [DOCKERFILE](#dockerfile)
     * [Misc](#misc-1)
         * [LDAP](#ldap)
+
 <!-- TOC -->
 
 ## OS
+
 ### Linux
+
 #### Essentials
 
 ```shell
@@ -81,6 +86,8 @@ tree  # Prints also nested dirs and folders in tree structure
 
 env  # List environment variables
 
+set -a; source /etc/environment; set +a;  # Update values from /etc/environment
+
 which python  # Print where command binaries are located
 
 cat  # Print file content to console
@@ -93,6 +100,7 @@ sed 's/unix/linux/' geekfile.txt
 ```
 
 #### Bash
+
 Restart terminal
 
     bash --login
@@ -116,6 +124,7 @@ Get access token
     az account get-access-token
 
 ### Windows
+
 Open bat script and see result in terminal (keeping output after finishing script)
 
     cmd /k my_script.bat
@@ -126,6 +135,7 @@ count number of localhost connections
     netstat -n | findstr 127.0.0.1 | find /v /c ""
 
 #### PowerShell
+
 **Filter strings**
 
 	echo $Env:PATH | Select-String  substring
@@ -137,7 +147,6 @@ Inverse filter
 **Print content**
 
 	Get-Content file
-
 
 **Print env var**
 
@@ -152,12 +161,16 @@ Where command binaries are located
 ## Git
 
 ### Glossary
+
 - origin - Remote url shorthand
 - merge - Add changes from some branch into another in new commit
-- rebase - Add changes from some branch via changing history (no new commit) !!!Use only when only you are using the branch. If already on remote, need force push!!!
-- fast-forward - It's possible to do merge without new commit (only possible if there are no changes on the other branch)
+- rebase - Add changes from some branch via changing history (no new commit) !!!Use only when only you are
+  using the branch. If already on remote, need force push!!!
+- fast-forward - It's possible to do merge without new commit (only possible if there are no changes on the
+  other branch)
 
 ### Essentials
+
 ```bash
     # Create .git folder
     git init
@@ -208,6 +221,10 @@ Where command binaries are located
 
     # Delete branch remotely
     git push --delete origin dev
+    
+    # Change upstream (e.g. after branch renaming)
+    git push --set-upstream origin "branch-name"
+
 ```
 
 ### Misc
@@ -234,13 +251,13 @@ Create fork in GitHub, clone forked repository, add upstream with
 
     git remote add upstream original-repo-url
 
-Update upstream repo in your IDE, create new branch, push changes to the fork, then create pull request in GitHub, resolve comments and if it's accepted, delete branch from local repo.
+Update upstream repo in your IDE, create new branch, push changes to the fork, then create pull request in
+GitHub, resolve comments and if it's accepted, delete branch from local repo.
 
 **Delete last commit**
 
     git reset --hard <commit-id>
     git push origin -f
-
 
 **Delete tag**
 
@@ -288,14 +305,15 @@ First setup hooks path, because normal hooks are gitignored by default
 
     git config core.hooksPath git_hooks_path
 
-
 ## Docker
+
 ### Installation
 
 Install on linux [tutorial](https://docs.docker.com/engine/install/ubuntu/)
 Install on windows [tutorial](https://docs.docker.com/docker-for-windows/install/)
 
 ### Commands
+
 **Build**
 
     docker build -f /path/to/a/Dockerfile .
@@ -321,6 +339,7 @@ Install on windows [tutorial](https://docs.docker.com/docker-for-windows/install
     docker pull alpine
 
 **Misc**
+
 ```shell
 # List all your containrers
 docker ps
@@ -371,12 +390,15 @@ docker container stop webserver
 ```
 
 ## Misc
+
 ### LDAP
+
 ```python
 from ldap3 import Server, Connection, SAFE_SYNC
 
 server = Server('rb-gc-lb.bosch.com', port=3268)
-conn = Connection(server, 'psx6fe@bosch.com', '!nPm?XyS2NowX2', client_strategy=SAFE_SYNC, auto_bind=True, auto_referrals=False)
+conn = Connection(server, 'psx6fe@bosch.com', '!nPm?XyS2NowX2', client_strategy=SAFE_SYNC, auto_bind=True,
+                  auto_referrals=False)
 
 # In search function, there are two important positional params.
 # First define space to return the results and second means filter, that is applied on searched results
