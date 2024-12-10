@@ -1098,7 +1098,7 @@ data_for_predictions_full.sort_index(inplace=True)
 
 ### Resample datetime dataframe
 
-df_res = df.resample('M').sum() # Méně řádků na výstupu
+df_res = df.resample('ME').sum() # Méně řádků na výstupu
 
 ### Copy of dataframe
 

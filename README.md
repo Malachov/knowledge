@@ -96,6 +96,8 @@ cat test > test1  # Overwrite content of file with other file
 
 # Searching, find and replace, insertion or deletion without opening file
 # The below simple sed command replaces the word “unix” with “linux” in the file.
+
+du -h -t 1000000 -d 1 /home/mda2bj/venvs/3.10/lib/python3.10/site-packages/ | sort -h  # Show directory sizes sorted and thresholded
 sed 's/unix/linux/' geekfile.txt
 ```
 
