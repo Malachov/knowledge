@@ -399,7 +399,7 @@ docker container stop webserver
 from ldap3 import Server, Connection, SAFE_SYNC
 
 server = Server('rb-gc-lb.bosch.com', port=3268)
-conn = Connection(server, 'psx6fe@bosch.com', '!nPm?XyS2NowX2', client_strategy=SAFE_SYNC, auto_bind=True,
+conn = Connection(server, 'ntuser@bosch.com', 'XXX', client_strategy=SAFE_SYNC, auto_bind=True,
                   auto_referrals=False)
 
 # In search function, there are two important positional params.
