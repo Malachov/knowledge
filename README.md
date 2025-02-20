@@ -368,6 +368,9 @@ docker run --detach --publish 80:80 --name webserver nginx
 
 # Stop container
 docker container stop webserver
+
+# Copy to container
+docker cp source/path IMAGE_ID:/path/to
 ````
 
 ### DOCKERFILE
