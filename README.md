@@ -82,6 +82,8 @@ sudo apt-get install build-essential
 ls  # Print files and dirs from current folder 
 ls -a # Also prints hidden files
 
+grep # Search text for text occurence. -i for case insensitivity, -r for recursive in dirs
+
 tree  # Prints also nested dirs and folders in tree structure
 
 env  # List environment variables
@@ -91,8 +93,6 @@ set -a; source /etc/environment; set +a;  # Update values from /etc/environment
 which python  # Print where command binaries are located
 
 cat  # Print file content to console
-cat test >> test1  # Append the content of a file to different file
-cat test > test1  # Overwrite content of file with other file
 
 # Searching, find and replace, insertion or deletion without opening file
 # The below simple sed command replaces the word “unix” with “linux” in the file.
@@ -102,6 +102,11 @@ sed 's/unix/linux/' geekfile.txt
 ```
 
 #### Bash
+
+Redirect output from stdout to file
+
+	cat test > test1  # Overwrite content if file exists
+	cat test >> test1  # Append to file
 
 Restart terminal
 
@@ -395,6 +400,13 @@ docker cp source/path IMAGE_ID:/path/to
 ```
 
 ## Misc
+
+### OpenSSL
+
+Show SSL certificate used for https page
+
+	openssl s_client -showcerts -connect <git_url>:443 </dev/null 2>/dev/null |openssl x509 -outform PEM > gitlab.crt
+
 
 ### LDAP
 

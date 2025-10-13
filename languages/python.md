@@ -224,7 +224,7 @@ Posible modes - DocBlockR, ReST, Numpy, Google
 
 Long description...
 
-Example:
+Examples:
     Examples can be given using either the ``Example`` or ``Examples``
     sections. Sections support any reStructuredText formatting, including
     literal blocks::
@@ -2019,7 +2019,7 @@ class Clovek(object):  # Class Human is child (it inherits from) class object
 # Class can inherit from more classes at once...
 # class Clovek(tvor, bytost):
 
-class DecoratorExample:
+class DecoratorExamples:
 
     def __init__(self):
         self.name = 'Decorator_Example'
@@ -2189,7 +2189,7 @@ What happens when we create an object in python class ?
 
     class  Vector(object):
         def __init__(self,  *args):
-            """ Create a vector, example: v = Vector(1,2) """
+            """ Create a vector, Examples: v = Vector(1,2) """
             if len(args)  ==  0:
                 self.values =  (0,0)
             else:
