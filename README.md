@@ -8,40 +8,51 @@ The format for snippets is markdown to be able to easily edit and also to have n
 
 There are also language specific references - helpers for particular languages.
 
-When you are contributing, there are two possible ways. For adding new snippets, put it directly to main. If
-you want to
-change the structure, create feature branch and merge request to main. If you edit some headings, do not
-forget to
-update table of contents in JetBrains - just show Quick fixes and do Update table...
+When you are contributing, there are two possible ways. For adding new snippets, put it directly to main. If you want to change the structure, create a feature branch and merge request to main. If you edit any headings, do not forget to update the table of contents in JetBrains—just show Quick fixes and do Update table...
 
 ## TOC
 
 <!-- TOC -->
 
-* [Documentation](#documentation)
-    * [TOC](#toc)
-    * [OS](#os)
-        * [Linux](#linux)
-            * [Essentials](#essentials)
-            * [Do after every fresh install](#do-after-every-fresh-install)
-    * [Terminals](#terminals)
-        * [Linux](#linux-1)
-            * [Bash](#bash)
-        * [Windows](#windows)
-            * [PowerShell](#powershell)
-            * [Cmd](#cmd)
-    * [Git](#git)
-        * [Glossary](#glossary)
-        * [Essentials](#essentials-1)
-        * [Misc](#misc)
-        * [.gitignore](#gitignore)
-        * [Git hooks](#git-hooks)
-    * [Docker](#docker)
-        * [Installation](#installation)
-        * [Commands](#commands)
-        * [DOCKERFILE](#dockerfile)
-    * [Misc](#misc-1)
-        * [LDAP](#ldap)
+- [Documentation](#documentation)
+  - [TOC](#toc)
+  - [OS](#os)
+    - [Linux](#linux)
+      - [Essentials](#essentials)
+      - [Do after every fresh install](#do-after-every-fresh-install)
+      - [Structure](#structure)
+      - [Users, groups, permissions](#users-groups-permissions)
+      - [systemd](#systemd)
+        - [systemctl](#systemctl)
+        - [journalctl](#journalctl)
+  - [Terminals](#terminals)
+    - [POSIX](#posix)
+    - [Linux](#linux-1)
+      - [Bash](#bash)
+      - [Azure cli](#azure-cli)
+    - [Windows](#windows)
+      - [PowerShell](#powershell)
+      - [Cmd](#cmd)
+  - [Git](#git)
+    - [Glossary](#glossary)
+    - [Essentials](#essentials-1)
+    - [Misc](#misc)
+    - [.gitignore](#gitignore)
+    - [Git hooks](#git-hooks)
+  - [Docker](#docker)
+    - [Installation](#installation)
+    - [Commands](#commands)
+    - [DOCKERFILE](#dockerfile)
+  - [API](#api)
+    - [Swagger and OpenAPI](#swagger-and-openapi)
+    - [Standard endpoints](#standard-endpoints)
+  - [AI](#ai)
+    - [Ollama](#ollama)
+  - [Query languages](#query-languages)
+    - [PromQL](#promql)
+  - [Misc](#misc-1)
+    - [OpenSSL](#openssl)
+    - [LDAP](#ldap)
 
 <!-- TOC -->
 
@@ -74,7 +85,94 @@ TODO add folders description, fstab description etc.
 sudo apt-get install build-essential
 ```
 
+#### Structure
+
+/dev		- Devices (like keayboard or mouse) files
+/etc		- Configuration files
+/home		- User personal files, configs etc.
+/opt		- Externall big apps, that don't follow unix conventions
+/proc
+/usr		- Apps installed via package manager defined here (lib + bin)
+    /local	- Apps installed manually
+/var 		- Things that changes frequently like logs
+
+#### Users, groups, permissions
+
+```bash
+sudo adduser alice            # Create a new user 'alice'
+sudo deluser alice            # Delete user 'alice'
+sudo passwd alice             # Change password for 'alice'
+su - alice                    # Switch to user 'alice'
+
+sudo addgroup developers      # Create a new group 'developers'
+sudo usermod -aG developers $USER  # Add current user to 'developers' group
+sudo deluser alice developers # Remove 'alice' from 'developers' group
+groups                        # List groups for current user
+
+sudo chown alice file.txt     # Change owner of file.txt to 'alice'
+sudo chgrp developers file.txt # Change group of file.txt to 'developers'
+chmod 640 file.txt            # Set permissions: rw- r-- --- on file.txt
+chmod -R 755 /path/to/dir     # Recursively set permissions rwxr-xr-x on directory
+
+whoami                        # Show current user
+cat /etc/passwd               # Show all users
+cat /etc/group                # Show all groups
+ls -l file.txt                # Show permissions and details for file.txt
+```
+
+#### systemd
+Default init system and service manager.
+
+##### systemctl
+CLI to controll systemd
+
+With systemctl, you can do commands: status, start, restart, stop, enable, disable, list-unit-files
+
+    systemctl --user restart pulseaudio
+
+To show definition e.g.
+
+    systemctl cat --user pulseaudio.service
+	
+To edit service, edit file content on
+
+System unit files: Usually in /lib/systemd/system/ or /usr/lib/systemd/system/
+User unit files: ~/.config/systemd/user/
+Custom overrides: /etc/systemd/system/ (system-wide) or ~/.config/systemd/user/ (user)
+
+Then
+
+	systemctl --user daemon-reload
+
+Beware, that system only restart system and user only user.
+
+##### journalctl
+journalctl is the tool to view logs collected by systemd’s journal service. It provides access to all system logs, including boot, kernel, service, and application logs.
+
+```bash
+journalctl -b (logs from current boot)
+journalctl -u ssh (logs for ssh named service)
+journalctl -p err (only error logs)
+```
+
 ## Terminals
+
+### POSIX
+
+```bash
+if [ "$VAR" = "develop" ]; then
+    TARGET="development"
+elif [ "$VAR" = "main" ]; then
+    TARGET="production"
+else
+    echo "Only main and develop branches can be released"
+    exit 1
+fi
+```
+
+**DNS**
+
+    nslookup url.com
 
 ### Linux
 
@@ -88,7 +186,13 @@ tree  # Prints also nested dirs and folders in tree structure
 
 env  # List environment variables
 
-set -a; source /etc/environment; set +a;  # Update values from /etc/environment
+# Checks if variable is defined
+if [ -z "$VAR" ]; then
+    echo "Variable VAR not set."
+    exit 1
+fi
+
+set -a; source /etc/environment; set +a;  # Update values from /etc/environment without restart
 
 which python  # Print where command binaries are located
 
@@ -105,8 +209,17 @@ sed 's/unix/linux/' geekfile.txt
 
 Redirect output from stdout to file
 
-	cat test > test1  # Overwrite content if file exists
-	cat test >> test1  # Append to file
+ cat test > test1  # Overwrite content if file exists
+ cat test >> test1  # Append to file
+
+Hide error output
+
+    2>/dev/null
+
+
+Suppress both output and errors (shorthand)
+    
+    &>/dev/null
 
 Restart terminal
 
@@ -116,19 +229,45 @@ Execute file
 
     . path
 
+Bash Parameter Expansion - Removing Prefix
+
+`##` means, that last symbol will be removed
+`*:` is the pattern to match - it means "any characters (*) followed by a colon (:)"
+
+    USER="${FULL_USER##*:}"
+
 Get DNS server address
 
     nmcli dev show | grep 'IP4.DNS'
 
+Get custom IP adresses for existing interfaces
+
+    ifconfig -a
+
 Resolve IP address of domain name
 
+    # Do not include protocol
     dig @<DNS_server_IP_address> google.com +short
+
+Testing networking
+
+    curl https://webpage.com
+
+If DNS is not available
+
+    curl --resolve webpage.com:443:1.2.3.4 https://webpage.com/path/ -I
+
+
 
 #### Azure cli
 
 Get access token
 
     az account get-access-token
+
+If havinproblem with incorrect audience, set receiver URL in resource
+
+    az account get-access-token --resource https://graph.microsoft.com
 
 ### Windows
 
@@ -145,7 +284,7 @@ count number of localhost connections
 
 **Filter strings**
 
-	echo $Env:PATH | Select-String  substring
+ echo $Env:PATH | Select-String  substring
 
 Inverse filter
 
@@ -153,11 +292,11 @@ Inverse filter
 
 **Print content**
 
-	Get-Content file
+ Get-Content file
 
 **Print env var**
 
-	echo $Env:PATH
+ echo $Env:PATH
 
 #### Cmd
 
@@ -232,9 +371,18 @@ Where command binaries are located
     # Change upstream (e.g. after branch renaming)
     git push --set-upstream origin "branch-name"
 
+    # Get current branch name
+    git rev-parse --abbrev-ref HEAD
+
 ```
 
 ### Misc
+
+**Delete all branches with no upstream**
+
+TODO test if fresh active branch is not deleted and if only local ones are dropped
+
+    git branch -vv | grep ': gone]' | awk '{print $1}' | xargs git branch -D
 
 **Clean all history (create, stage, commit, push)**
 
@@ -369,7 +517,8 @@ docker run --interactive --tty ubuntu bash
 
 # Example 2 = nginx
 docker run --detach --publish 80:80 --name webserver nginx
-# If open http://localhost in browser, you see nginx welcome
+# If open http://localhost in browser, y
+ou see nginx welcome
 
 # Stop container
 docker container stop webserver
@@ -399,14 +548,97 @@ docker cp source/path IMAGE_ID:/path/to
     ADD - Add directories/files to your image
 ```
 
+## API
+
+### Swagger and OpenAPI
+
+OpenAPI is specification and document format (JSON and YAML) that describes HTTP API
+
+Swagger UI is web app that reads an OpenAPI document and renders interactive docs with "Try it out"
+
+Open OpenAPI Swagger file
+
+    docker run --rm -p 8080:8080 -e OAUTH_USE_PKCE=true -e 'SWAGGER_JSON=/spec.json' -v <PATH_TO_SPEC>:/spec.json swaggerapi/swagger-ui
+
+You can also add -e OAUTH_CLIENT_ID=XXX to prefill client_id. Beware, that for Auth code flow you need to keep client_secret empty!
+
+Name conventions:
+
+For version 2: api_name.swagger.json
+For version 3: api_name.openapi.json
+
+### Standard endpoints
+
+Sometimes security definition is under
+
+    <BASE_URL>/.well-known/openid-configuration
+
+## AI
+
+### Ollama
+"""
+
+```bash
+ollama-start
+
+ollama pull phi3.5
+
+ollama serve &
+```
+
+The api has two parts
+
+- OpenAI compatible endpoints like
+    http://localhost:11434/v1/completions
+    http://localhost:11434/v1/chat/completions
+    http://localhost:11434/v1/models
+- Custom ollama API on http://localhost:11434/api/...
+"""
+
+```python
+import os
+
+os.environ["OLLAMA_ORIGINS"] = "*"
+
+from openai import OpenAI
+
+
+# Point to local Ollama
+client = OpenAI(
+    base_url="http://localhost:11434/v1",
+    api_key="ollama",  # Dummy key, not used
+)
+
+response = client.chat.completions.create(
+    model="phi3.5", messages=[{"role": "user", "content": "What is the size of France in square miles?"}]
+)
+
+print(f"Response output: {response.choices[0].message.content}")
+```
+
+## Query languages
+
+### PromQL
+
+Get CPU usage for all nodes:
+
+    node_cpu_seconds_total
+
+Average CPU usage over 5 minutes:
+
+    avg(rate(node_cpu_seconds_total[5m]))
+
 ## Misc
 
 ### OpenSSL
 
 Show SSL certificate used for https page
 
-	openssl s_client -showcerts -connect <git_url>:443 </dev/null 2>/dev/null |openssl x509 -outform PEM > gitlab.crt
+    openssl s_client -showcerts -connect <git_url>:443 </dev/null 2>/dev/null |openssl x509 -outform PEM > gitlab.crt
 
+Shows all chain of trust (all necessary CAs)
+
+    openssl s_client -connect teams.microsoft.com:443 -proxy localhost:3128 -servername teams.microsoft.com -showcerts </dev/null 2>&1 | tee /tmp/teams_tls.txt
 
 ### LDAP
 

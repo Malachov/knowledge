@@ -1,34 +1,64 @@
 # Markdown
 
-## Media
+## Syntax
 
-[Link name](<https://www.youtube.com/>)
-
-<img src="Image.png" width=400>
-
-![Image 2](http://url/a.png)
-
-## Formatting
-
-# A first-level heading
-## A second-level heading
+### Basics
 
 **Bold**
 
 ~~Strikethrough~~
 
-> Blockquote 
+> Blockquote
+>
+> - with other elements
+> - like list
+> 
+>> With nested content
 
-* Unordered list
-* Unordered list 2
 
 1. Ordered list
-2. Ordered list 2
+   1. Optionally nested
+   2. Like this
+2. If numbers are not fixed automatically, use 1. everywhere
 
 --- 
+
+* Unordered list with multiline content  
+can be achieved by two spaces at every line or trailing \  
+* Unordered list 2
+
+### Code blocks and literal
 
 `Inline code` with backticks 
 
 ```python
 print('Code')
 ``` 
+
+### Line breaks
+
+Non paragraph linebreaks  
+Are done  
+Via two spaces after the line
+
+Another line break<br><br> via html break
+
+### Table
+
+| Left-Aligned | Center-Aligned | Right-Aligned |
+| :----------- |:--------------:| -------------:|
+| This         | is             | an            |
+| aligned      | text           | example       |
+| example      | table          | right         |
+
+## Structure
+
+Some paragraph text.
+
+### TOC
+
+In VS Code or Pycharm, there are ways to update Table of Content automatically, never write TOC manually.
+
+### Newlines
+
+Do not forget to add one empty line before and after every heading.
