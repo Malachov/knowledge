@@ -46,10 +46,10 @@ Another line break<br><br> via html break
 ### Table
 
 | Left-Aligned | Center-Aligned | Right-Aligned |
-| :----------- |:--------------:| -------------:|
-| This         | is             | an            |
-| aligned      | text           | example       |
-| example      | table          | right         |
+| :----------- | :------------: | ------------: |
+| This         |       is       |            an |
+| aligned      |      text      |       example |
+| example      |     table      |         right |
 
 ## Structure
 
