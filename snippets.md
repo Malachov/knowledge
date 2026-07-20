@@ -13,6 +13,7 @@
       - [systemd](#systemd)
         - [systemctl](#systemctl)
         - [journalctl](#journalctl)
+      - [CA certificates](#ca-certificates)
   - [Terminals](#terminals)
     - [POSIX](#posix)
     - [Linux](#linux-1)
@@ -148,6 +149,19 @@ journalctl -b (logs from current boot)
 journalctl -u ssh (logs for ssh named service)
 journalctl -p err (only error logs)
 ```
+
+#### CA certificates
+
+If you want to add new CA Certs, you paste those to `/usr/local/share/ca-certificates/` you can use new folders there. Write one cert per file, not bundle of many certs in one file.
+
+Run `sudo update-ca-certificates`
+
+There is `/etc/ssl/certs/ca-certificates.crt` containing all certs generated. You can use it with env vars like
+
+- NODE_EXTRA_CA_CERTS
+- REQUESTS_CA_BUNDLE
+- SSL_CERT_FILE
+
 
 ## Terminals
 

@@ -170,17 +170,40 @@ uv auth
 uv self update
 
 # Manage python versions (install, uninstall)
-uv python install 3.13
+uv python list
+uv python install 3.14
+uv python pin 3.14
 
-# Create virtual environment
+# Shows which interpreter (and venv) is currently used with uv
+uv python find
+```
+
+If you have more python sources in a project, you should use UV workspaces. This means, that you create one pyproject.toml in your root as well as pyproject.toml for each source. You have one central .venv in your root.
+
+```python
+# Create virtual environment (flags: -p 3.13)
 uv venv
 
 # Adds package to pyproject.toml, installs it to venv and updates lock
 uv add numpy
 
+# If using workspaces
+uv add --package app httpx2
+
 # Install libraries to current venv. Beware that you should usually rather use uv add over uv pip
 uv pip install numpy
 uv pip remove numpy
+
+# Install all libs from requirements.txt or pyproject.toml
+uv pip install -r path-to-file
+
+# Install 
+
+# Install current library
+uv pip install .
+
+# Editable install (use local files in dynamic way - Good for custom libraries)
+uv pip install -e path-to-lib
 
 # It installs packages including dev and default groups(much faster than pip), provides true dependency locking (including transitive dependencies), and automatically selects the correct venv.
 uv sync
@@ -194,10 +217,7 @@ uv sync
 # For getting production venv with
 uv sync --no-dev --no-default-groups
 
-# If you work in monorepo and having more pyproject.toml files, you can use workspaces. Just add something like this to pyproject.toml
-# [tool.uv.workspace]
-# members = ["services/*"]
-
+# If you work in monorepo and having more pyproject.toml files, you can use workspaces.
 uv sync --all-packages
 uv sync --package app
 
@@ -216,7 +236,24 @@ uv run command
 ```toml
 [tool.uv]
 default-groups = ["dev"]
+
+
+[[tool.uv.index]]
+name = "index-name"
+url = "https://index-name/path"
+default = true
+
+[tool.uv.workspace]
+members = ["services/*"]
+
+[tool.uv.sources]
+app = { workspace = true }
 ```
+
+If index name is artifactyory, then use these ENVs
+
+UV_INDEX_ARTIFACTORY_USERNAME=xxx
+UV_INDEX_ARTIFACTORY_PASSWORD=xxx
 
 
 ### Python version management

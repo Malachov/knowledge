@@ -1,18 +1,30 @@
 # Js reference
 
-This is also reference for TypeScript in own typing section
+## Table of Contents
 
-## TOC
+- [Js reference](#js-reference)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+    - [Volta](#volta)
+  - [Syntax](#syntax)
+    - [Misc](#misc)
+  - [Conditions](#conditions)
+    - [HTML interaction](#html-interaction)
 
-<!-- TOC -->
-* [Js reference](#js-reference)
-  * [TOC](#toc)
-  * [New](#new)
-  * [Syntax](#syntax)
-    * [Misc](#misc)
-  * [Conditions](#conditions)
-    * [HTML interaction](#html-interaction)
-<!-- TOC -->
+
+## Installation
+
+### Volta
+
+```shell
+curl https://get.volta.sh | bash
+
+# Set default version
+volta install node@24
+
+# Set project default version (to package.json)
+volta pin node@24
+```
 
 ## Syntax
 
