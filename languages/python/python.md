@@ -18,9 +18,9 @@
     - [Requirements.txt](#requirementstxt)
   - [Style guide (linting, formatting)](#style-guide-linting-formatting)
   - [Documentation - docstrings](#documentation---docstrings)
-      - [Google](#google)
-      - [Numpy](#numpy)
-      - [reStructured text](#restructured-text)
+    - [Google](#google)
+    - [Numpy](#numpy)
+    - [reStructured text](#restructured-text)
   - [Project scaffolding - Cookiecutter](#project-scaffolding---cookiecutter)
   - [Syntax](#syntax)
     - [Multi line code](#multi-line-code)
@@ -98,6 +98,7 @@
       - [Images, pictures](#images-pictures)
       - [Database](#database)
         - [pyodbc, sqlalchemy](#pyodbc-sqlalchemy)
+        - [Spanner](#spanner)
       - [Misc](#misc)
         - [Tables](#tables)
     - [GUI](#gui)
@@ -115,7 +116,7 @@
     - [Dask](#dask)
       - [Dask formats](#dask-formats)
   - [Garbage collector](#garbage-collector)
-      - [Force to empty memory](#force-to-empty-memory)
+    - [Force to empty memory](#force-to-empty-memory)
   - [Miscellaneous](#miscellaneous)
   - [Misc](#misc-1)
     - [Snippets - examples](#snippets---examples)
@@ -123,14 +124,12 @@
       - [Show bytecode](#show-bytecode)
       - [Encoding JSON with Python](#encoding-json-with-python)
 
-
 ## Dedicated modules
 
 There are dedicated knowledge files for
 
 - Data science (e.g. pandas and numpy)
 - Machine learning (e.g. scikit-learn, pytorch)
-
 
 ## General
 
@@ -150,15 +149,18 @@ alias pip=pip3
 
 ## Environment management
 
-In this document, environment management covers Python version management, package management, and virtual environments.
+In this document, environment management covers Python version management, package management, and
+virtual environments.
 
 Prefer `uv` when possible. Alternative methods are kept for backward compatibility.
 
 ### uv
 
-`uv` is a modern Python toolchain manager. It can install specific Python versions, create virtual environments, manage dependencies quickly, and produce reproducible lock files.
+`uv` is a modern Python toolchain manager. It can install specific Python versions, create virtual
+environments, manage dependencies quickly, and produce reproducible lock files.
 
-It can replace tools like `virtualenv` and `pip` in most workflows. For many commands, you can use the same mental model as `pip`.
+It can replace tools like `virtualenv` and `pip` in most workflows. For many commands, you can use
+the same mental model as `pip`.
 
 Particular commands will be shown in particular sections.
 
@@ -178,10 +180,38 @@ uv python pin 3.14
 uv python find
 ```
 
-If you have more python sources in a project, you should use UV workspaces. This means, that you create one pyproject.toml in your root as well as pyproject.toml for each source. You have one central .venv in your root.
+If a repository contains multiple related Python projects, you can use a `uv` workspace. The root
+`pyproject.toml` defines the workspace and its members; each member still has its own
+`pyproject.toml` and declares its own dependencies. The workspace shares one `uv.lock` and, by
+default, one `.venv` at the root. Use `uv sync --all-packages` to install every member, or
+`uv sync --package <name>` to sync one member and its dependencies.
 
 ```python
-# Create virtual environment (flags: -p 3.13)
+# Run command. It calls sync before
+uv run pytest .
+
+# It installs packages including dev and default groups(much faster than pip), provides true dependency locking (including transitive dependencies), and automatically selects the correct venv. If venv do not exists, then it creates it
+# Use UV_PROJECT_ENVIRONMENT=<PATH> if you don't want to use local .venv folder
+
+uv sync
+
+# Possible kwargs:
+#  --all-extras
+#  --extra XXX
+#  --all-groups
+#  --group XXX
+
+# Get production venv
+uv sync --no-dev --no-default-groups
+
+# If you work in monorepo and having more pyproject.toml files, you can use workspaces.
+uv sync --all-packages
+uv sync --package app
+
+# Updates lock with newer versions. You still need to use sync afterwards
+uv lock --upgrade
+
+# Create virtual environment (flags: -p 3.13). Beware, that sync do that automatically
 uv venv
 
 # Adds package to pyproject.toml, installs it to venv and updates lock
@@ -197,32 +227,11 @@ uv pip remove numpy
 # Install all libs from requirements.txt or pyproject.toml
 uv pip install -r path-to-file
 
-# Install 
-
 # Install current library
 uv pip install .
 
 # Editable install (use local files in dynamic way - Good for custom libraries)
 uv pip install -e path-to-lib
-
-# It installs packages including dev and default groups(much faster than pip), provides true dependency locking (including transitive dependencies), and automatically selects the correct venv.
-uv sync
-
-# Possible kwargs:
-#  --all-extras
-#  --extra XXX
-#  --all-groups
-#  --group XXX
-
-# For getting production venv with
-uv sync --no-dev --no-default-groups
-
-# If you work in monorepo and having more pyproject.toml files, you can use workspaces.
-uv sync --all-packages
-uv sync --package app
-
-# Updates lock with newer versions. You still need to use sync afterwards
-uv lock --upgrade
 
 # Push library to index-url
 uv publish
@@ -232,6 +241,15 @@ uv run command
 ```
 
 #### pyproject.toml configuration
+
+`[tool.uv.workspace]` declares which directories are Python workspace members. Patterns in `members`
+and `exclude` are relative to the workspace root, and every included member directory must contain a
+`pyproject.toml`. The workspace root is also a member.
+
+`[tool.uv.sources]` tells `uv` where to resolve a declared dependency from during development. It
+does not add the dependency; the package must also be listed in a project's `dependencies` or
+dependency group. A workspace source uses the matching local member and installs it editable.
+Sources are `uv`-specific and do not change the dependency metadata published with a package.
 
 ```toml
 [tool.uv]
@@ -244,17 +262,18 @@ url = "https://index-name/path"
 default = true
 
 [tool.uv.workspace]
-members = ["services/*"]
+members = ["services/*", "libs/*"]
+exclude = ["libs/experimental"]
 
 [tool.uv.sources]
 app = { workspace = true }
+some-package = { git = "https://example.com/some-package.git", tag = "v1.2.0" }
+some-package = { path = "../some-package", editable = true }
 ```
 
 If index name is artifactyory, then use these ENVs
 
-UV_INDEX_ARTIFACTORY_USERNAME=xxx
-UV_INDEX_ARTIFACTORY_PASSWORD=xxx
-
+UV_INDEX_ARTIFACTORY_USERNAME=xxx UV_INDEX_ARTIFACTORY_PASSWORD=xxx
 
 ### Python version management
 
@@ -266,7 +285,8 @@ On Windows, use the official installer. On Linux:
 
 #### Select default global version
 
-**PATH precedence:** The first `python` executable found in `PATH` is used. Put your preferred interpreter or venv path first.
+**PATH precedence:** The first `python` executable found in `PATH` is used. Put your preferred
+interpreter or venv path first.
 
 **update-alternatives:**
 
@@ -279,7 +299,8 @@ sudo update-alternatives --config python
 
 ### Virtual environment (venv)
 
-A virtual environment is an isolated Python interpreter with its own installed packages. It is usually created as `.venv` in the repository root and added to `.gitignore`.
+A virtual environment is an isolated Python interpreter with its own installed packages. It is
+usually created as `.venv` in the repository root and added to `.gitignore`.
 
 ```shell
 # Create new virtual environment (recommended)
@@ -314,7 +335,8 @@ pip install ipykernel --upgrade pip --trusted-host pypi.org
 
 ### Requirements.txt
 
-`requirements.txt` lists project dependencies and allows one-shot installation. For new projects, prefer `pyproject.toml` with a lock file.
+`requirements.txt` lists project dependencies and allows one-shot installation. For new projects,
+prefer `pyproject.toml` with a lock file.
 
 ```shell
 # Install all dependencies from requirements file
@@ -343,7 +365,9 @@ Example for how to use it in VS Code - Add to settings.json:
 "black-formatter.args": ["--line-length", "110"],
 ```
 
-If you are not sure how to format code, you can try [pep 8](https://www.python.org/dev/peps/pep-0008/) or [google style guide](https://google.github.io/styleguide/pyguide.html)
+If you are not sure how to format code, you can try
+[pep 8](https://www.python.org/dev/peps/pep-0008/) or
+[google style guide](https://google.github.io/styleguide/pyguide.html)
 
 ## Documentation - docstrings
 
@@ -1229,8 +1253,7 @@ Example of generator is range(10000)
 
 ### Decorators
 
-Dekorators are functions, that wrap other functions, by that
-it can change it's behaviour.
+Dekorators are functions, that wrap other functions, by that it can change it's behaviour.
 
 ```python
 def repeated(puvodni_funkce):
@@ -1263,7 +1286,8 @@ def repeated(puvodni_funkce):
 
 ### Modules
 
-A Python module is a `.py` file. You can import standard modules, third-party packages, and your own modules.
+A Python module is a `.py` file. You can import standard modules, third-party packages, and your own
+modules.
 
 ```python
 from math import sqrt
@@ -1642,7 +1666,8 @@ for i in reversed(range(5)):
 
 #### \_\_name\_\_
 
-If file is imported, code inside the condition will not execute. If the file itself is run, code will execute.
+If file is imported, code inside the condition will not execute. If the file itself is run, code
+will execute.
 
     if __name__ == "__main__":
         pass
@@ -1831,7 +1856,6 @@ r"ain\B"
 [+]     In sets, +, *, ., |, (), $,{} has no special meaning, so [+] means: return a match for any + character in the string
 ```
 
-
 #### Subprocess - Run shell commands
 
 ```python
@@ -1887,7 +1911,8 @@ time.sleep(1)
 
 #### Argparse - Command Line Interface (cli)
 
-If you want to call a script from terminal like `python myscript.py` and want to add some optional arguments (one letter -a , -b etc. or word with two dashes --var)
+If you want to call a script from terminal like `python myscript.py` and want to add some optional
+arguments (one letter -a , -b etc. or word with two dashes --var)
 
 Nowadays argparse is better and more often used than sys.argv, getopt
 
@@ -1922,17 +1947,21 @@ There are also 3rd party libraries for this as `click`
 
 ### Asynchronicity and parallelism
 
-Async code mean, that GIL bounded python code still uses just one CPU, but when it waits for network or file system, it can switch context and jump to another task, so it doesn't block.
+Async code mean, that GIL bounded python code still uses just one CPU, but when it waits for network
+or file system, it can switch context and jump to another task, so it doesn't block.
 
 Parallel code means, that it runs on multiple CPUs.
 
 #### IO bound, CPU bound
 
-If you want to make app faster, you need to think where is the bottleneck. It can be one CPU limitation (CPU bound) or blocking one task by waiting for something (IO bound)
+If you want to make app faster, you need to think where is the bottleneck. It can be one CPU
+limitation (CPU bound) or blocking one task by waiting for something (IO bound)
 
-**IO bound example**. I have 50 URLs and I need to get 50 responses. I call it in for loop, send one request, wait 200 ms and then call another. You need **async** here.
+**IO bound example**. I have 50 URLs and I need to get 50 responses. I call it in for loop, send one
+request, wait 200 ms and then call another. You need **async** here.
 
-**CPU bound example**. I evaluate ML model and it takes 1s. It runs on 1 CPU. On 16 cores, it would take much less. You need **parallel** here.
+**CPU bound example**. I evaluate ML model and it takes 1s. It runs on 1 CPU. On 16 cores, it would
+take much less. You need **parallel** here.
 
 #### Concurrent futures
 
@@ -1940,8 +1969,11 @@ Use `concurrent.futures` for simple parallel execution APIs.
 
 ThreadPoolExecutor vs ProcessPoolExecutor:
 
-- `ThreadPoolExecutor`: Best for blocking IO tasks (HTTP with sync libs, file operations, waiting on external systems). It has lower startup/communication overhead.
-- `ProcessPoolExecutor`: Best for CPU-heavy tasks (math, transforms, data crunching) because it bypasses the GIL. It has higher overhead because data is serialized between processes. Functions for it must be picklable and defined at module level.
+- `ThreadPoolExecutor`: Best for blocking IO tasks (HTTP with sync libs, file operations, waiting on
+  external systems). It has lower startup/communication overhead.
+- `ProcessPoolExecutor`: Best for CPU-heavy tasks (math, transforms, data crunching) because it
+  bypasses the GIL. It has higher overhead because data is serialized between processes. Functions
+  for it must be picklable and defined at module level.
 
 ```python
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
@@ -1979,7 +2011,8 @@ Rule of thumb:
 
 - Waiting most of the time: use `ThreadPoolExecutor`.
 - Computing most of the time: use `ProcessPoolExecutor`.
-- If you want to have async processing of functions, that are async, use `asyncio` instead. Use executors mainly for legacy blocking code.
+- If you want to have async processing of functions, that are async, use `asyncio` instead. Use
+  executors mainly for legacy blocking code.
 
 #### Multiprocessing
 
@@ -2090,7 +2123,8 @@ It is way how to turn markdown files into documentation
 
 There is also material for MkDocs, which create webpage with React Material inspired look.
 
-Beware, that MkDocs is not maintained for a long time and it may be problematic to incude it into techstack. There are new alternatives that are drop-in replacement.
+Beware, that MkDocs is not maintained for a long time and it may be problematic to incude it into
+techstack. There are new alternatives that are drop-in replacement.
 
 ##### Sphinx - Create documentation
 
@@ -2117,7 +2151,8 @@ sphinx-quickstart
 
 Fill in the `config.py` and `index.rst`
 
-You can use mypythontools [project-starterexample](https://github.com/Malachov/mypythontools/tree/master/content/project-starter/docs/source)
+You can use mypythontools
+[project-starterexample](https://github.com/Malachov/mypythontools/tree/master/content/project-starter/docs/source)
 
 You can build it locally with
 
@@ -2125,8 +2160,8 @@ You can build it locally with
 make html
 ```
 
-Or you can make account on [readthedocs](https://readthedocs.org/) - It's free.
-And the documentation will be automatically made on every github push to master.
+Or you can make account on [readthedocs](https://readthedocs.org/) - It's free. And the
+documentation will be automatically made on every github push to master.
 
 #### Tests
 
@@ -2554,7 +2589,6 @@ img = img.convert('L') # Converts image to grayscale
 img=np.array(img)
 ```
 
-
 #### Database
 
 ##### pyodbc, sqlalchemy
@@ -2579,6 +2613,31 @@ engine = create_engine(conn_str)
 dataframe_to_sql.to_sql(name='FactProduction', con=engine, schema='Stage', if_exists='append', index=False)
 ```
 
+##### Spanner
+
+```python
+from google.cloud import spanner
+
+client = spanner.Client(project="rbprj-100458")
+instance = client.instance("INSTANCE_NAME")
+database = instance.database("DATABASE_NAME")
+
+# Insert using DML in a transaction
+def insert_data(transaction):
+    transaction.execute_update(
+        "INSERT INTO Document (doc_id, title, silo_ids) "
+        "VALUES (@id, @title, @silos)",
+        params={"id": "doc-001", "title": "Test", "silos": ["general"]},
+        param_types={
+            "id": spanner.param_types.STRING,
+            "title": spanner.param_types.STRING,
+            "silos": spanner.param_types.Array(spanner.param_types.STRING),
+        },
+    )
+
+database.run_in_transaction(insert_data)
+```
+
 #### Misc
 
 ##### Tables
@@ -2599,7 +2658,8 @@ Possible options for GUI are
 - WxWidgets
 - Kivy (for phone apps)
 
-In many cases, integrating a Python backend with a JavaScript frontend (Vue, React, Svelte) or Electron can be a more maintainable option.
+In many cases, integrating a Python backend with a JavaScript frontend (Vue, React, Svelte) or
+Electron can be a more maintainable option.
 
 JS look way much better than python alternatives.
 
@@ -2609,7 +2669,8 @@ TODO: open a system window to select a file.
 
 #### VUE and EEl (Electron JS like library)
 
-You can use mypythontools pyvueeel for building an app with graphical interface. It contains working examples.
+You can use mypythontools pyvueeel for building an app with graphical interface. It contains working
+examples.
 
 Beware, that it is not maintained and it should never be used for productive systems!
 
@@ -2617,9 +2678,11 @@ Beware, that it is not maintained and it should never be used for productive sys
 
 ### Pyinstaller
 
-You can create binaries with pyinstaller, so other user can run an app even with no python installed.
+You can create binaries with pyinstaller, so other user can run an app even with no python
+installed.
 
-You don't even need to install pyinstaller and you can use mypythontools build module (you can use VS Code Task to build an app with single click)
+You don't even need to install pyinstaller and you can use mypythontools build module (you can use
+VS Code Task to build an app with single click)
 
 [Documentation](https://mypythontools.readthedocs.io/mypythontools.build.html) for how to do it.
 
@@ -2631,8 +2694,9 @@ Build bootloader locally to avoid false positive antivirus alert (in tutorial).
 
 #### Line profiling
 
-Simplest and probably best way is to use jupyter, extensions and magic.
-Simple example is in project-starter test profiling.ipynb [here](https://github.com/Malachov/mypythontools/tree/master/content/project-starter/tests)
+Simplest and probably best way is to use jupyter, extensions and magic. Simple example is in
+project-starter test profiling.ipynb
+[here](https://github.com/Malachov/mypythontools/tree/master/content/project-starter/tests)
 
 If you want to use just python, you can
 

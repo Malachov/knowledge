@@ -16,15 +16,23 @@
       - [CA certificates](#ca-certificates)
   - [Terminals](#terminals)
     - [POSIX](#posix)
-    - [Linux](#linux-1)
+    - [Linux terminal](#linux-terminal)
       - [Bash](#bash)
-      - [Azure cli](#azure-cli)
+      - [Commands - LS, man, curl etc.](#commands---ls-man-curl-etc)
     - [Windows](#windows)
       - [PowerShell](#powershell)
       - [Cmd](#cmd)
+  - [Cloud](#cloud)
+    - [Azure](#azure)
+      - [Azure CLI](#azure-cli)
+    - [GCP - Google Cloud Platform](#gcp---google-cloud-platform)
+      - [gcloud CLI](#gcloud-cli)
+      - [Spanner](#spanner)
   - [Git](#git)
     - [Glossary](#glossary)
-    - [Essentials](#essentials-1)
+    - [Git essentials](#git-essentials)
+    - [Worktrees](#worktrees)
+    - [Submodules](#submodules)
     - [Misc](#misc)
     - [.gitignore](#gitignore)
     - [Git hooks](#git-hooks)
@@ -33,18 +41,37 @@
     - [Commands](#commands)
     - [Dockerfile](#dockerfile)
   - [Networking](#networking)
-    - [TCP, HTTP, REST API etc.](#tcp-http-rest-api-etc)
+    - [TCP, HTTP, REST API etc](#tcp-http-rest-api-etc)
       - [Headers](#headers)
         - [Cache-Control](#cache-control)
         - [ETag](#etag)
         - [If-None-Match](#if-none-match)
+        - [Browser security headers](#browser-security-headers)
+      - [NGINX](#nginx)
+        - [Static file server directives](#static-file-server-directives)
       - [Swagger and OpenAPI](#swagger-and-openapi)
       - [Standard endpoints](#standard-endpoints)
+  - [Databases](#databases)
+    - [Graphs](#graphs)
+  - [Security](#security)
+    - [OAuth](#oauth)
+      - [Vocabulary](#vocabulary)
+      - [Common Entra ID configuration](#common-entra-id-configuration)
+      - [ID token and access token](#id-token-and-access-token)
+      - [Scopes, delegated permissions and application permissions](#scopes-delegated-permissions-and-application-permissions)
+      - [Client credentials](#client-credentials)
+      - [Authorization Code with PKCE (OIDC)](#authorization-code-with-pkce-oidc)
+      - [Frontend + Backend example](#frontend--backend-example)
   - [AI](#ai)
+    - [GitHub Copilot](#github-copilot)
     - [Ollama](#ollama)
+    - [MCPs](#mcps)
+      - [MCP Inspector](#mcp-inspector)
   - [Query languages](#query-languages)
+    - [Spanner GQL](#spanner-gql)
+      - [MATCH](#match)
     - [PromQL](#promql)
-  - [Misc](#misc-1)
+  - [Miscellaneous](#miscellaneous)
     - [OpenSSL](#openssl)
     - [LDAP](#ldap)
 
@@ -54,39 +81,39 @@
 
 #### Essentials
 
-```shell
+```bash
 # Update all packages
-sudo apt-get update
-
+sudo apt update
 # Upgrade all packages
-sudo apt-get upgrade
+sudo apt full-upgrade
+# Install a package
+sudo apt install PACKAGE
 
-# Install package
-sudo apt-get install python3.5-dev
+# Bash startup
+~/.bashrc
+# Login startup
+~/.profile
 ```
-
-Run on bash startup - `~/.bashrc`
-Run on every startup - `~/.profile`
-
-TODO add folders description, fstab description etc.
 
 #### Do after every fresh install
 
-```shell
-# Install all building compilers (g++ error etc...)
-sudo apt-get install build-essential
+```bash
+# Install build tools and compilers
+sudo apt install build-essential
 ```
 
 #### Structure
 
-/dev - Devices (like keyboard or mouse) files
-/etc - Configuration files
-/home - User personal files, configs etc.
-/opt - External big apps, that don't follow unix conventions
-/proc
-/usr - Apps installed via package manager defined here (lib + bin)
-/local - Apps installed manually
-/var - Things that change frequently like logs
+```text
+/dev        devices
+/etc        system configuration
+/home       user files
+/opt        self-contained third-party applications
+/proc       kernel and process information
+/usr        distribution-managed programs and libraries
+/usr/local  manually installed programs
+/var        changing data such as logs
+```
 
 #### Users, groups, permissions
 
@@ -114,578 +141,837 @@ ls -l file.txt                # Show permissions and details for file.txt
 
 #### systemd
 
-Default init system and service manager.
-
 ##### systemctl
 
-CLI to control systemd
+```bash
+# Restart or inspect a service
+systemctl [--user] {status|start|restart|stop|enable|disable} SERVICE
+# Show a service definition
+systemctl [--user] cat SERVICE
+# Reload unit files after editing one
+systemctl --user daemon-reload
+```
 
-With systemctl, you can do commands: status, start, restart, stop, enable, disable, list-unit-files
-
-    systemctl --user restart pulseaudio
-
-To show definition e.g.
-
-    systemctl cat --user pulseaudio.service
-
-To edit service, edit file content on
-
-System unit files: Usually in /lib/systemd/system/ or /usr/lib/systemd/system/
-User unit files: ~/.config/systemd/user/
-Custom overrides: /etc/systemd/system/ (system-wide) or ~/.config/systemd/user/ (user)
-
-Then
-
-    systemctl --user daemon-reload
-
-Beware, that system only restart system and user only user.
+System units: `/usr/lib/systemd/system/`; user units: `~/.config/systemd/user/`. Overrides:
+`/etc/systemd/system/` or `~/.config/systemd/user/`.
 
 ##### journalctl
 
-journalctl is the tool to view logs collected by systemd’s journal service. It provides access to all system logs, including boot, kernel, service, and application logs.
-
 ```bash
-journalctl -b (logs from current boot)
-journalctl -u ssh (logs for ssh named service)
-journalctl -p err (only error logs)
+# Logs from the current boot
+journalctl -b
+# Logs for a service
+journalctl -u SERVICE
+# Errors only
+journalctl -p err
 ```
 
 #### CA certificates
 
-If you want to add new CA Certs, you paste those to `/usr/local/share/ca-certificates/` you can use new folders there. Write one cert per file, not bundle of many certs in one file.
+Put one PEM certificate per `.crt` file under `/usr/local/share/ca-certificates/`. Then run:
 
-Run `sudo update-ca-certificates`
+```bash
+sudo install -m 644 certificate.crt /usr/local/share/ca-certificates/name.crt
+sudo update-ca-certificates
+```
 
-There is `/etc/ssl/certs/ca-certificates.crt` containing all certs generated. You can use it with env vars like
-
-- NODE_EXTRA_CA_CERTS
-- REQUESTS_CA_BUNDLE
-- SSL_CERT_FILE
-
+Generated bundle: `/etc/ssl/certs/ca-certificates.crt`. Common variables: `NODE_EXTRA_CA_CERTS`,
+`REQUESTS_CA_BUNDLE`, `SSL_CERT_FILE`.
 
 ## Terminals
 
 ### POSIX
 
 ```bash
-if [ "$VAR" = "develop" ]; then
-    TARGET="development"
-elif [ "$VAR" = "main" ]; then
-    TARGET="production"
+# Map a branch name to an environment
+if [ "$VAR" = develop ]; then
+    TARGET=development
+elif [ "$VAR" = main ]; then
+    TARGET=production
 else
-    echo "Only main and develop branches can be released"
+    echo "Only main and develop branches can be released" >&2
     exit 1
 fi
 ```
 
-**DNS**
-
-    nslookup url.com
-
-### Linux
-
-```bash
-ls  # Print files and dirs from current folder
-ls -a # Also prints hidden files
-
-grep # Search text for text occurrence. -i for case insensitivity, -r for recursive in dirs
-
-tree  # Prints also nested dirs and folders in tree structure
-
-env  # List environment variables
-
-# Checks if variable is defined
-if [ -z "$VAR" ]; then
-    echo "Variable VAR not set."
-    exit 1
-fi
-
-set -a; source /etc/environment; set +a;  # Update values from /etc/environment without restart
-
-which python  # Print where command binaries are located
-
-cat  # Print file content to console
-
-# Searching, find and replace, insertion or deletion without opening file
-# The below simple sed command replaces the word “unix” with “linux” in the file.
-
-du -h -t 1000000 -d 1 /home/mda2bj/venvs/3.10/lib/python3.10/site-packages/ | sort -h  # Show directory sizes sorted and thresholded
-sed 's/unix/linux/' geekfile.txt
-```
+### Linux terminal
 
 #### Bash
 
-Redirect output from stdout to file
+```bash
+# Exit on errors, unset vars, or pipeline errors
+set -euo pipefail
 
-cat test > test1 # Overwrite content if file exists
-cat test >> test1 # Append to file
+# Redirect stderr; redirect stdout and stderr (Bash)
+2>/dev/null
+&>/dev/null
 
-Hide error output
+# Restart a login shell; execute a script in the current shell
+bash --login
+. path
 
-    2>/dev/null
+# Redirect stdout: overwrite; append
+cat test > test1
+cat test >> test1
 
-Suppress both output and errors (shorthand)
+# Remove the longest prefix ending in ':'
+USER="${FULL_USER##*:}"
 
-    &>/dev/null
+# Sync folders and remove stale files
+staging_dir="$(mktemp -d)"
+trap 'rm -rf -- "$staging_dir"' EXIT
+rsync -a --delete --exclude='node_modules/' --exclude='.env' \
+  "$staging_dir/" ./destination/
+```
 
-Restart terminal
+#### Commands - LS, man, curl etc.
 
-    bash --login
+```bash
+# Fetch a web page; show response headers
+curl https://example.com
+curl -I https://example.com
 
-Execute file
+# List files: long format, include hidden files, human-readable sizes
+ls -lah
 
-    . path
+# Find files by name, case-insensitively
+find . -type f -iname '*.yaml'
 
-Bash Parameter Expansion - Removing Prefix
+# Search recursively with line numbers; -F treats the pattern literally
+grep -RInF -- 'PATTERN' .
+# Find the literal '-f' option in help output
+tar --help | grep -F -- '-f'
 
-`##` means, that last symbol will be removed
-`*:` is the pattern to match - it means "any characters (\*) followed by a colon (:)"
+# Show filesystem and directory sizes in human-readable units
+df -h
+du -sh PATH
 
-    USER="${FULL_USER##*:}"
+# Show processes
+ps aux
 
-Get DNS server address
+# Show addresses and routes
+ip -br address
+ip route
 
-    nmcli dev show | grep 'IP4.DNS'
+# Show NetworkManager devices and DNS servers
+nmcli device status
+nmcli -f IP4.DNS device show
 
-Get custom IP addresses for existing interfaces
+# Resolve a name; query a specific DNS server
+dig +short example.com
+dig @DNS_SERVER example.com +short
+dig -x 1.2.3.4 +short
 
-    ifconfig -a
+# Open a manual page; search manual page names and descriptions
+man tar
+man -k KEYWORD
 
-Resolve IP address of domain name
+In the pager, press `/PATTERN` to search, `n` for the next match, `N` for the previous match, and
+`q` to quit.
 
-    # Do not include protocol
-    dig @<DNS_server_IP_address> google.com +short
+# Prints content of file to console
+cat example.png
 
-Testing networking
-
-    curl https://webpage.com
-
-If DNS is not available
-
-    curl --resolve webpage.com:443:1.2.3.4 https://webpage.com/path/ -I
-
-#### Azure cli
-
-Get access token
-
-    az account get-access-token
-
-If having a problem with incorrect audience, set receiver URL in resource
-
-    az account get-access-token --resource https://graph.microsoft.com
+# Shows content of file in terminal and allow scroll up and down
+less example.png
+```
 
 ### Windows
 
-Open a bat script and keep output visible after it finishes
- 
-    cmd /k my_script.bat
-
-**netstat**
-count number of localhost connections
-
-    netstat -n | findstr 127.0.0.1 | find /v /c ""
+```cmd
+# Keep a batch script window open
+cmd /k my_script.bat
+# Count localhost connections
+netstat -n | findstr 127.0.0.1 | find /v /c ""
+```
 
 #### PowerShell
 
-**Filter strings**
-
+```powershell
+# Filter a string
 echo $Env:PATH | Select-String substring
-
-Inverse filter
-
-    echo $Env:PATH | Select-String substring -NotMatch
-
-**Print content**
-
+# Invert the filter
+echo $Env:PATH | Select-String substring -NotMatch
+# Print a file
 Get-Content file
-
-**Print env var**
-
+# Print an environment variable
 echo $Env:PATH
+```
 
 #### Cmd
 
-Where command binaries are located
+```cmd
+# Locate a command
+where python
+```
 
-    where python
+## Cloud
+
+### Azure
+
+#### Azure CLI
+
+```bash
+# Get an access token
+az account get-access-token
+# Get a token for a specific resource
+az account get-access-token --resource https://graph.microsoft.com
+```
+
+### GCP - Google Cloud Platform
+
+#### gcloud CLI
+
+```bash
+# Login. If you want to set it as default, add --update-adc
+gcloud auth login
+
+# View active config
+gcloud config list
+
+# Set project
+gcloud config set project Name
+
+# Set default region TODO: if working, remove  --region= from other commands
+gcloud config set run/region europe-west1
+
+# Deploy from source (builds container via Cloud Build)
+gcloud run deploy SERVICE_NAME \
+  --source . \
+  --region europe-west1 \
+  --allow-unauthenticated  # or --no-allow-unauthenticated
+
+# Deploy from a container image
+gcloud run deploy SERVICE_NAME \
+  --image europe-west1-docker.pkg.dev/rbprj-100458/REPO/IMAGE:TAG \
+  --region europe-west1
+
+# Stream logs
+gcloud run services logs read SERVICE_NAME --region=europe-west1 --limit=50
+
+# Describe service
+gcloud run services describe SERVICE_NAME --region=europe-west1
+
+# Check your current permissions
+gcloud projects get-iam-policy rbprj-100458 \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:YOUR_EMAIL" \
+  --format="table(bindings.role)"
+```
+
+#### Spanner
+
+```bash
+# List instances
+gcloud spanner databases list --instance=INSTANCE_NAME
+
+# List DBs
+gcloud spanner databases list --instance=INSTANCE_NAME
+
+# Run a single SQL query
+gcloud spanner databases execute-sql DATABASE_NAME \
+  --instance=INSTANCE_NAME \
+  --sql="SELECT * FROM Document LIMIT 10"
+
+# Run from a file
+gcloud spanner databases execute-sql DATABASE_NAME \
+  --instance=INSTANCE_NAME \
+  --sql="$(cat query.sql)"
+
+# Apply DDL changes (e.g. create table, add column)
+gcloud spanner databases ddl update DATABASE_NAME \
+  --instance=INSTANCE_NAME \
+  --ddl="ALTER TABLE Document ADD COLUMN new_col STRING(MAX)"
+
+# Show current DDL (all CREATE TABLE statements)
+gcloud spanner databases ddl describe DATABASE_NAME \
+  --instance=INSTANCE_NAME
+
+# Create a new database
+gcloud spanner databases create DATABASE_NAME \
+  --instance=INSTANCE_NAME \
+  --ddl-file=schema.sql
+
+# Export database to GCS (creates a Dataflow job)
+gcloud spanner databases export DATABASE_NAME \
+  --instance=INSTANCE_NAME \
+  --destination=gs://BUCKET_NAME/export/
+
+# Import from GCS
+gcloud spanner databases import DATABASE_NAME \
+  --instance=INSTANCE_NAME \
+  --source=gs://BUCKET_NAME/export/
+```
 
 ## Git
 
 ### Glossary
 
-- origin - Remote url shorthand
-- merge - Add changes from some branch into another in new commit
-- rebase - Add changes from some branch via changing history (no new commit) !!!Use only when only you are
-  using the branch. If already on remote, need force push!!!
-- fast-forward - It's possible to do merge without new commit (only possible if there are no changes on the
-  other branch)
+- `origin`: remote URL shorthand
+- `merge`: add another branch's changes with a new commit
+- `rebase`: replay commits on another base; avoid rewriting shared branches
+- `fast-forward`: move the branch pointer when no merge commit is needed
 
-### Essentials
+### Git essentials
 
 ```bash
-    # Create .git folder
-    git init
+# Create or clone a repository
+git init
+git clone REPOSITORY_URL
 
-    # Stage all
-    git add -A
+# Inspect, stage, commit, and review history
+git status
+git add -A
+git commit -am "message"
+git log --oneline --decorate
 
-    # Commit all
-    git commit -a -m "new message"
+# Add a remote and push a branch
+git remote add origin REPOSITORY_URL
+git push -u origin BRANCH
 
-    git remote add origin www.github...repo-path
+# Create or switch branches and merge changes
+git switch -c feature
+git switch main
+git merge feature
 
-  # Download existing repo
+# Delete a local or remote branch
+git branch -d feature
+git push --delete origin feature
 
-    git clone repo-url
+# Discard changes or unstage a file
+git restore FILE
+git restore --staged FILE
+```
 
-    # Configuration
+### Worktrees
 
-    git config --global user.name "Your name"
-    git config --global user.email "yourname@provider.com"
+```bash
+# List worktrees
+git worktree list
+# Add a worktree for an existing branch
+git worktree add ../repo-feature feature
+# Create a branch and worktree from main
+git worktree add -b feature ../repo-feature main
+# Remove a clean worktree
+git worktree remove ../repo-feature
+# Remove stale worktree metadata
+git worktree prune
+# Prevent or allow pruning
+git worktree lock ../repo-feature
+git worktree unlock ../repo-feature
+```
 
-    # Print what is changed
-    git status
+### Submodules
 
-    # Stage
-    git add add.js
+```bash
+# Clone a repository with its submodules
+git clone --recurse-submodules REPOSITORY_URL
+# Add a submodule
+git submodule add REPOSITORY_URL path/to/submodule
+# Initialize submodules after cloning
+git submodule update --init --recursive
+# Show or update submodules at recorded commits
+git submodule status
+git submodule update --recursive
+git submodule update --remote --merge --recursive
 
-    # Reset to commit and keep changes in code in stage
-    git reset --soft 852309
+# Inspect and update a submodule
+git -C path/to/submodule status
+git -C path/to/submodule pull
 
-    # Reset 5 commits back
-    git reset --soft HEAD~5
-
-    # Reset to commit and delete changes (destructive)
-    git reset --hard 852309
-
-    # Create branch
-    git branch dev
-
-    # Move to branch
-    git checkout dev
-
-    # Merge branches (if join master with dev branch, first checkout back to master then)
-    git merge dev
-
-    # Delete branch locally
-    git branch -d dev
-
-    # Delete branch remotely
-    git push --delete origin dev
-
-    # Change upstream (e.g. after branch renaming)
-    git push --set-upstream origin "branch-name"
-
-    # Get current branch name
-    git rev-parse --abbrev-ref HEAD
-
+# Record an updated submodule commit
+git add path/to/submodule
+git commit -m "Update submodule"
+git submodule foreach --recursive git status
+git submodule deinit -f path/to/submodule
+git rm -f path/to/submodule
 ```
 
 ### Misc
 
-**Delete all branches with no upstream**
-
-TODO test if fresh active branch is not deleted and if only local ones are dropped
-
-    git branch -vv | grep ': gone]' | awk '{print $1}' | xargs git branch -D
-
-**Clean all history (create, stage, commit, push)**
-
-Delete `.git` folder and
-
 ```bash
-git init
-git add .
-git commit -m "Removed history, due to sensitive data"
-git remote add origin github.com:your-project/your-repo.git
-git push -u --force origin master
-```
+# Delete local branches whose upstream was removed
+git fetch --prune
+git branch -vv | awk '/: gone]/{print $1}' | xargs -r git branch -d
 
-**`.gitignore` seems to have no effect**
+# Stop tracking a file that is now ignored
+git rm --cached -r -- path/to/file
 
-    git rm --cached spark-warehouse/ -r -f
+# Fork workflow
+git remote add upstream ORIGINAL_URL
+git fetch upstream
 
-**How to contribute on GitHub**
-
-Create fork in GitHub, clone forked repository, add upstream with
-
-    git remote add upstream original-repo-url
-
-Update upstream repo in your IDE, create new branch, push changes to the fork, then create pull request in
-GitHub, resolve comments and if it's accepted, delete branch from local repo.
-
-**Delete last commit**
-
-    # Warning: destructive and rewrites history
-    git reset --hard <commit-id>
-    git push origin -f
-
-**Delete tag**
-
-```bash
-# Locally
-git tag -d v1.0
-
-# Remote
-git push --delete origin tagname
+# Delete a tag
+git tag -d TAG
+git push --delete origin TAG
 ```
 
 ### .gitignore
 
-Create file called `.gitignore` on root. Only code is supposed to be on git. No binaries, libraries etc.
-You can define what files will be sent to git and what files will be ignored
-
 ```gitignore
-    # Comments must begin on new line !!!
-
-    # Ignore one file
-    readme.txt
-
-    # Ignore only in current folder
-    /readme.txt
-
-    # Ignore folder
-    output/
-
-    # ignore all *java files
-    *.java
-
-    # All files in directory
-    abc/**
-
-    # Zero or more directories
-    a/**/b
-
-    # Do not ignore
-    !readme.txt
+readme.txt       # Any matching path
+/readme.txt      # Repository root only
+output/          # Directory
+*.java           # All Java files
+abc/**           # Everything below abc
+a/**/b           # b at any depth below a
+!readme.txt      # Do not ignore this path
 ```
 
 ### Git hooks
 
-First setup hooks path, because normal hooks are gitignored by default
-
-    git config core.hooksPath git_hooks_path
+```bash
+# Use a custom hooks directory
+git config core.hooksPath git_hooks_path
+```
 
 ## Docker
 
 ### Installation
 
-Install on linux [tutorial](https://docs.docker.com/engine/install/ubuntu/)
-Install on windows [tutorial](https://docs.docker.com/docker-for-windows/install/)
+Install Docker using the official instructions:
+[Linux](https://docs.docker.com/engine/install/ubuntu/) or
+[Windows](https://docs.docker.com/desktop/install/windows-install/).
 
 ### Commands
 
-**Build**
-
-    docker build -f /path/to/a/Dockerfile .
-
-        -f      Point to dockerfile if not in current folder
-        -t      Add tag
-        -o      Output destination
-
-**Run**
-
-    docker run -d -p 80:80 docker/getting-started
-
-        -d              Run in the background
-        -p 80:80        Map port 80 of the host to port 80 in the container
-        -i              Keep STDIN open even if not attached
-        --expose        Expose a port or a range of ports
-        -h              Container host name
-
-**Download image**
-
-    docker pull alpine
-
-**Misc**
-
-```shell
-# List all your containers
-docker ps
-
-# Remove container with it's id from docker ps
-docker rm a39c259df46
-
-# List all images
+```bash
+# Show Docker and Compose versions
+docker version
+# Build an image
+docker build -f Dockerfile -t IMAGE .
+# Run a container and publish a port
+docker run -d --name CONTAINER -p 80:80 IMAGE
+# Start a Compose application
+docker compose up -d --build --remove-orphans
+# Download an image; list images and running containers
+docker pull IMAGE
 docker images
-
-# List all running container
-docker container ls
-
-# Delete image
-docker rmi 60959f29de3a
-
-# Example - run linux
-docker run --interactive --tty ubuntu bash
-# Then you can use host, ls...
-
-# Example 2 = nginx
-docker run --detach --publish 80:80 --name webserver nginx
-# If you open http://localhost in browser, you see nginx welcome
-
-# Stop container
-docker container stop webserver
-
-# Copy to container
-docker cp source/path IMAGE_ID:/destination/path
+docker ps
+# Open a shell in a running container
+docker exec -it CONTAINER sh
+# Stop and remove a container; remove an image
+docker stop CONTAINER
+docker rm CONTAINER
+docker rmi IMAGE
+docker cp source/path CONTAINER:/destination/path
 ```
 
 ### Dockerfile
 
 ```dockerfile
-# This is comment ignored by docker.  # Inline comment also possible
-
-# Starting container <image>[:tag]
-FROM alpine:3.4
-
-# Combine RUNs into one
-RUN apk update && \
-    apk add curl && \
-    apk add vim && \
-
-ENV PG_MAJOR=9.3  # Add environment variable
-EXPOSE 80/tcp # Allow to access this port
-CMD - Run this script after docker run
-ENTRYPOINT - Similar to CMD - run this script after docker run - If user should not change the script (arguments)
-
- # (Preferred) Add directories/files to your image
+# syntax=docker/dockerfile:1
+FROM alpine:3.20
+RUN apk add --no-cache curl
+ENV PG_MAJOR=9.3
+EXPOSE 80
 COPY . .
-
-# Add directories/files to your image
-ADD
+CMD ["sh"]
 ```
 
 ## Networking
 
-### TCP, HTTP, REST API etc.
+### TCP, HTTP, REST API etc
 
 #### Headers
 
 ##### Cache-Control
 
-- `public, max-age=31536000, immutable`
-- `public, max-age=60, stale-while-revalidate=300`
-- `private, max-age=300`
-- `no-cache`
-- `no-store`
+`max-age` sets how long a response is fresh. `public` allows shared caches, such as a CDN, to store
+it; `immutable` tells clients not to revalidate it while it is fresh. With NGINX, `expires 1y` sets
+a one-year freshness lifetime (including `max-age`), while an explicit
+`Cache-Control: public, immutable` adds the cache directives. A cache may still evict a response
+early. Long-lived caching is best for assets whose filenames change when their contents change.
+
+```http
+Cache-Control: public, max-age=31536000, immutable
+Cache-Control: public, max-age=60, stale-while-revalidate=300
+Cache-Control: private, max-age=300
+Cache-Control: no-cache
+Cache-Control: no-store
+```
 
 ##### ETag
 
-Entity tag returned in response to represent a specific version of a resource.
+An `ETag` identifies a response version; send it back as `If-None-Match`. An unchanged resource
+returns `304 Not Modified`.
 
 ##### If-None-Match
 
-Request header containing a previously received ETag.  
-If unchanged, server returns `304 Not Modified`; otherwise returns `2xx` with new content.
+```http
+If-None-Match: "VERSION"
+```
+
+##### Browser security headers
+
+- `X-Content-Type-Options: nosniff` tells browsers to use the declared `Content-Type` instead of
+  guessing a different type from the response body.
+- `X-Frame-Options: DENY` prevents the page from being displayed in a frame. CSP's `frame-ancestors`
+  directive is the more flexible modern control.
+- `Content-Security-Policy` restricts where a page may load scripts, styles, images, frames, and
+  other resources. It can also control embedding and form submissions. Start with a restrictive
+  policy and allow only sources the application needs.
+- `Referrer-Policy: strict-origin-when-cross-origin` sends the full URL as the referrer for
+  same-origin requests, only the origin for cross-origin HTTPS requests, and no referrer when
+  navigating from HTTPS to HTTP.
+- `Cross-Origin-Opener-Policy: same-origin` separates the page's browsing context from documents on
+  other origins, limiting communication through window references such as `window.opener`.
+- `Cross-Origin-Resource-Policy: same-origin` tells browsers to block other origins from loading the
+  response as a cross-origin, no-CORS resource. This can affect resources intended for use by
+  another origin.
+- `Permissions-Policy` controls which browser features, such as camera, microphone, or geolocation,
+  the page and embedded frames may use. For example, `camera=()` disables camera use;
+  `microphone=(self)` allows it only for the same origin.
+
+These headers are browser-enforced defenses, not substitutes for correct application behavior. For
+example, CSP does not replace output escaping, and frame restrictions do not replace authorization
+checks.
+
+#### NGINX
+
+##### Static file server directives
+
+```nginx
+# hides the NGINX version from generated error pages and the `Server` response header. It does not hide that the server is NGINX.
+
+
+server_tokens off;
+
+
+root /usr/share/nginx/html;
+
+
+# `index` lists the file names NGINX tries when a request targets a directory. With `index index. html`, a request for `/` can serve `/usr/share/nginx/html/index.html`.
+index index.html;
+```
 
 #### Swagger and OpenAPI
 
-OpenAPI is specification and document format (JSON and YAML) that describes HTTP API
+OpenAPI describes an HTTP API; Swagger UI renders it interactively.
 
-Swagger UI is web app that reads an OpenAPI document and renders interactive docs with "Try it out"
+```bash
+docker run --rm -p 8080:8080 -e SWAGGER_JSON=/spec.json \
+    -v "$PWD/spec.json:/spec.json" swaggerapi/swagger-ui
+```
 
-Open OpenAPI Swagger file
-
-    docker run --rm -p 8080:8080 -e OAUTH_USE_PKCE=true -e 'SWAGGER_JSON=/spec.json' -v <PATH_TO_SPEC>:/spec.json swaggerapi/swagger-ui
-
-You can also add -e OAUTH_CLIENT_ID=XXX to prefill client_id. Beware, that for Auth code flow you need to keep client_secret empty!
-
-Name conventions:
-
-For version 2: api_name.swagger.json
-For version 3: api_name.openapi.json
+Use `.swagger.json` for OpenAPI 2 and `.openapi.json` for OpenAPI 3.
 
 #### Standard endpoints
 
-Sometimes security definition is under
+```text
+/.well-known/openid-configuration
+```
 
-    <BASE_URL>/.well-known/openid-configuration
+## Databases
+
+### Graphs
+
+RDF: Resource Description Framework
+
+## Security
+
+### OAuth
+
+The client credentials grant is for service-to-service access; it does not sign in a user and does
+not return an OIDC ID token. Use Authorization Code with PKCE when a user signs in. A real browser
+application should use MSAL rather than manually implementing this protocol.
+
+#### Vocabulary
+
+- **Tenant:** the organization's Entra directory and identity boundary.
+- **App registration:** the application's identity/configuration in Entra, including its client ID,
+  redirect URIs, and permissions or exposed API scopes.
+- **Enterprise application (service principal):** the tenant-local instance of an app registration;
+  this is where admins can manage access, assignment, and consent in that tenant.
+- **Client:** the application requesting a token. Angular is a public client; a server-side web app
+  can be a confidential client.
+- **Public client:** code runs on a device or in a browser and cannot keep a client secret private.
+  Use PKCE, not a secret embedded in frontend code.
+- **Confidential client:** server-side code can protect a credential, such as a certificate or
+  secret. A secret belongs only on the server, never in Angular.
+- **Scope:** a delegated permission requested on behalf of a signed-in user, for example
+  `api://<API_CLIENT_ID>/access_as_user`. There is predefined one `.default` that you dont need to
+  define and it means all configured scopes. You can have more scopes in one token applience, but
+  all scopes needs to point to the same resource otherwise it's not valid.
+- **Audience (`aud`):** the intended recipient of a token. An ID token is for the frontend client;
+  an API access token is for the backend API.
+
+#### Common Entra ID configuration
+
+- **Supported account types / tenant:** choose which organization's or consumer accounts may sign
+  in. A company-only app commonly uses a single-tenant setting.
+- **Platform and redirect URI:** configure the URI where Entra returns the sign-in response. Choose
+  **Single-page application (SPA)** for Angular; it is a public client and must not use a client
+  secret. Choose **Web** for a server-side web app that can keep credentials on its server. The
+  platform affects redirect and flow settings; it does not make browser code safe for secrets.
+- **Expose an API:** on the backend/API registration, set its Application ID URI and define scopes
+  such as `access_as_user`.
+- **API permissions:** on the frontend registration, add the API's delegated scope so the client is
+  allowed to request it.
+- **Admin consent:** an administrator approves requested permissions for the organization, often to
+  avoid each user consenting individually. Consent grants the permission; it does not by itself
+  assign users to the app. If **Assignment required** is enabled on the enterprise application,
+  users or groups must also be assigned.
+
+#### ID token and access token
+
+- **ID token:** proves to the frontend that the user signed in. It is intended for the frontend
+  (`aud` is the frontend's client ID) and can contain identity claims such as a subject and display
+  name. It is not an API authorization token.
+- **Access token:** grants access to a particular API/resource. Its `aud` identifies that API and
+  its scopes (often in `scp`) describe delegated permissions. Send it to the API as a bearer token;
+  the API validates it. Access tokens are for the API, so frontend code should treat them as opaque.
+
+#### Scopes, delegated permissions and application permissions
+
+Scope defines what can be done. If someone applies to be able use scope, it's called permission.
+
+Scope can be delegated and application. Application scope is applied through Client credential flow,
+the delegated via Authorization flow.
+
+Permissions allows you to do something in other app. If you apply for permission, it means my Entra
+ID App can get token for another app (`aud` claim in a token).For example to get permission to read
+personal messages from teams, you need to use delegated one as permission for application will never
+be granted by user as it would mean, that application could read all personal chats of all users.
+
+Beware, that if you add permission, it may not be respected until you get admin grant. It can be
+true even for permissions that stated `Admin consent required: No`.
+
+- **Delegated permission:** Is used in the name of the particular user. It has same permissions as
+  user and user needs to approve permissions in pop up. The flow used for getting token with these
+  permissions is Authorization flow (interactive sign in browser)
+- **Application permission:** Is used as an application. The entity that have permissions or not is
+  Service principal (Entra ID app). Some rights are not able to get.
+
+#### Client credentials
+
+Use this only from a confidential server-side client. Grant the app registration application
+permissions to the target API and admin consent as required. Keep the client secret out of source
+control and browser code.
+
+```bash
+# Get a client credentials token
+curl --request POST "https://login.microsoftonline.com/<TENANT_ID>/oauth2/v2.0/token" \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  --data-urlencode 'grant_type=client_credentials' \
+  --data-urlencode 'client_id=<CLIENT_ID>' \
+  --data-urlencode 'client_secret=<CLIENT_SECRET>' \
+  --data-urlencode 'scope=<API_APPLICATION_ID_URI>/.default'
+```
+
+#### Authorization Code with PKCE (OIDC)
+
+This flow signs in a user. Register a public client redirect URI in Microsoft Entra ID; for this
+manual curl example, use the **Mobile and desktop applications** platform and `http://localhost`.
+The user must complete sign-in in a browser, so curl can prepare the `/authorize` request but cannot
+perform the interactive login. Copy the returned `code` from the browser's redirected URL and verify
+that the returned `state` matches the value generated below. The same `redirect_uri` and PKCE
+verifier are required when exchanging the code. Do not add a client secret to a public client.
+
+Set `TENANT_ID`, `CLIENT_ID`, and `API_SCOPE` in the shell first. `API_SCOPE` is a delegated scope
+exposed by the API, for example `api://API_CLIENT_ID/access_as_user`.
+
+```bash
+REDIRECT_URI='http://localhost'
+AUTH_ENDPOINT="https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/authorize"
+TOKEN_ENDPOINT="https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token"
+SCOPE="openid profile email offline_access ${API_SCOPE}"
+STATE="$(openssl rand -hex 16)"
+NONCE="$(openssl rand -hex 16)"
+CODE_VERIFIER="$(openssl rand -hex 32)"
+CODE_CHALLENGE="$(printf '%s' "$CODE_VERIFIER" | openssl dgst -sha256 -binary | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
+
+# Build the authorization URL, then open it in a browser and sign in.
+AUTH_URL="$(curl --silent --output /dev/null --write-out '%{url_effective}' \
+  --get "$AUTH_ENDPOINT" \
+  --data-urlencode "client_id=${CLIENT_ID}" \
+  --data-urlencode 'response_type=code' \
+  --data-urlencode "redirect_uri=${REDIRECT_URI}" \
+  --data-urlencode 'response_mode=query' \
+  --data-urlencode "scope=${SCOPE}" \
+  --data-urlencode "state=${STATE}" \
+  --data-urlencode "nonce=${NONCE}" \
+  --data-urlencode "code_challenge=${CODE_CHALLENGE}" \
+  --data-urlencode 'code_challenge_method=S256')"
+printf 'Open this URL in a browser:\n%s\n' "$AUTH_URL"
+
+# After sign-in, copy code from the redirect URL and confirm its state equals $STATE.
+AUTH_CODE='CODE_COPIED_FROM_REDIRECT_URL'
+
+# Exchange the one-time authorization code for tokens. No client secret for a public client.
+curl --request POST "$TOKEN_ENDPOINT" \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  --data-urlencode "client_id=${CLIENT_ID}" \
+  --data-urlencode 'grant_type=authorization_code' \
+  --data-urlencode "code=${AUTH_CODE}" \
+  --data-urlencode "redirect_uri=${REDIRECT_URI}" \
+  --data-urlencode "scope=${SCOPE}" \
+  --data-urlencode "code_verifier=${CODE_VERIFIER}"
+```
+
+The `openid` scope requests an ID token (OIDC) (aud is the web page that provides logging); the
+delegated `API_SCOPE` requests an access token for the API (aud is the API URL). In an Angular SPA,
+register the redirect URI under the **Single-page application** platform and let MSAL handle the
+authorization-code/PKCE exchange in the browser. A SPA redirect URI is not interchangeable with the
+native-client redirect used in this curl walkthrough. See the
+[authorization code flow documentation](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-auth-code-flow).
+
+#### Frontend + Backend example
+
+Generate 2 app registrations in Entra ID. App Back is for backend. Expose a scope there (e.g.
+`<api-client-id>/access_as_user`). App Front is for frontend where apply for permissions of scope
+from A. In Back add Front as Authorized client, so it is not necessary to consent with permisssions.
+
+To Front add redirect uri to your hosted page and to localhost for development.
+
+In your frontend app you can only use app B. Apply for this scope
+`openid profile api://<api-client-id>/access_as_user`. There will be two tokens available ID tokens
+with aud pointing to SPA and access token with aud to your API (<api-client-id> that will be checked
+in your API code).
 
 ## AI
 
-### Ollama
+### GitHub Copilot
 
 ```bash
-ollama-start
-
-ollama pull phi3.5
-
-ollama serve &
+gh skill install github/awesome-copilot documentation-writer
 ```
 
-The api has two parts
+### Ollama
 
-- OpenAI compatible endpoints like
-  http://localhost:11434/v1/completions
-  http://localhost:11434/v1/chat/completions
-  http://localhost:11434/v1/models
-- Custom ollama API on http://localhost:11434/api/...
+The API has two parts:
+
+- OpenAI-compatible endpoints:
+  - `http://localhost:11434/v1/completions`
+  - `http://localhost:11434/v1/chat/completions`
+  - `http://localhost:11434/v1/models`
+- Custom Ollama API: `http://localhost:11434/api/...`
+
+```bash
+# Download a model
+ollama pull MODEL
+# Run a model
+ollama run MODEL
+# Start the server; OpenAI-compatible API is at localhost:11434/v1
+ollama serve
+```
 
 ```python
-import os
-
-os.environ["OLLAMA_ORIGINS"] = "*"
-
 from openai import OpenAI
 
-
-# Point to local Ollama
-client = OpenAI(
-    base_url="http://localhost:11434/v1",
-    api_key="ollama",  # Dummy key, not used
-)
-
+client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
 response = client.chat.completions.create(
-    model="phi3.5", messages=[{"role": "user", "content": "What is the size of France in square miles?"}]
+    model="MODEL",
+    messages=[{"role": "user", "content": "Question"}],
 )
+print(response.choices[0].message.content)
+```
 
-print(f"Response output: {response.choices[0].message.content}")
+### MCPs
+
+#### MCP Inspector
+
+```bash
+ALLOWED_ORIGINS=http://127.0.0.1:6274 npx @modelcontextprotocol/inspector
 ```
 
 ## Query languages
 
+### Spanner GQL
+
+`GRAPH` selects the named graph to query. In a `MATCH` pattern, parentheses represent nodes and
+brackets represent edges. For example:
+
+```text
+(account:Account)-[transfer:Transfers]->(destination:Account)
+```
+
+- `(account:Account)` matches a node labeled `Account`. `account` is an alias used later in the
+  query to refer to this node.
+- `[transfer:Transfers]` matches an edge labeled `Transfers`; `transfer` is its alias.
+- `->` means the edge points from `account` to `destination`. Reversing the arrow would match the
+  opposite direction.
+- `(destination:Account)` matches the node at the other end, also labeled `Account`.
+
+Together, the pattern finds outgoing `Transfers` edges from one `Account` node to another. The
+aliases let the rest of the query read properties such as `account.id` or `transfer.amount`.
+`@account_id` is a query parameter supplied by the client.
+
+```sql
+GRAPH FinGraph
+MATCH (account:Account)-[transfer:Transfers]->(destination:Account)
+WHERE account.id = @account_id
+RETURN destination.id, transfer.amount
+ORDER BY transfer.amount DESC
+LIMIT 10;
+```
+
+#### MATCH
+
+```sql
+-- The MATCH clause doesn't need to be just `node - edge - node` but it can bu just node for example
+MATCH (n:Material)
+
+-- It can do multihop like
+MATCH (a)-[e1]->(b)-[e2]->(c)
+
+-- Nodes are in () brackets and edges are in square brackets and can be omited to match any edge.
+MATCH (n)->(m)
+```
+
 ### PromQL
 
-Get CPU usage for all nodes:
+```promql
+# CPU usage for all nodes
+node_cpu_seconds_total
+# Average CPU usage over 5 minutes
+avg(rate(node_cpu_seconds_total[5m]))
+```
 
-    node_cpu_seconds_total
-
-Average CPU usage over 5 minutes:
-
-    avg(rate(node_cpu_seconds_total[5m]))
-
-## Misc
+## Miscellaneous
 
 ### OpenSSL
 
-Show SSL certificate used for https page
-
-    openssl s_client -showcerts -connect <git_url>:443 </dev/null 2>/dev/null |openssl x509 -outform PEM > gitlab.crt
-
-Shows all chain of trust (all necessary CAs)
-
-    openssl s_client -connect teams.microsoft.com:443 -proxy localhost:3128 -servername teams.microsoft.com -showcerts </dev/null 2>&1 | tee /tmp/teams_tls.txt
+```bash
+# Show the SSL certificate used by an HTTPS page
+openssl s_client -showcerts -connect git.example.com:443 \
+  </dev/null 2>/dev/null \
+    | openssl x509 -outform PEM > gitlab.crt
+# Show the complete certificate chain through a proxy
+openssl s_client -connect teams.microsoft.com:443 \
+  -proxy localhost:3128 -servername teams.microsoft.com -showcerts \
+  </dev/null 2>&1 | tee /tmp/teams_tls.txt
+```
 
 ### LDAP
 
 ```python
-from ldap3 import Server, Connection, SAFE_SYNC
+from ldap3 import Connection, SAFE_SYNC, Server
 
-server = Server('rb-gc-lb.bosch.com', port=3268)
-conn = Connection(server, 'ntuser@bosch.com', 'XXX', client_strategy=SAFE_SYNC, auto_bind=True,
-                  auto_referrals=False)
+# Connect to LDAP
+server = Server("ldap.example.com", port=3268)
+connection = Connection(
+    server, "USER@EXAMPLE.COM", "PASSWORD", client_strategy=SAFE_SYNC,
+    auto_bind=True, auto_referrals=False,
+)
 
-# In search function, there are two important positional params.
-# First define space to return the results and second means filter, that is applied on searched results
-# Find Group by CN
-status, result, response, _ = conn.search('DC=bosch,DC=com', '(CN=Bj_PS_dux_streaming_c-schicht_editor)')
+# Find a group by CN
+status, result, response, _ = connection.search(
+  "DC=bosch,DC=com", "(CN=Bj_PS_dux_streaming_c-schicht_editor)"
+)
 
-# Find user
-status, result, response, _ = conn.search('DC=bosch,DC=com', '(sAMAccountName=psx6fe)')
+# Find a user by account name
+status, result, response, _ = connection.search(
+  "DC=bosch,DC=com", "(sAMAccountName=psx6fe)"
+)
 
-# Find type of records e.g. user
-status, result, response, _ = conn.search('DC=bosch,DC=com', '(Objectclass=User)')
+# Find records of a type, e.g. users
+status, result, response, _ = connection.search(
+  "DC=bosch,DC=com", "(objectClass=User)"
+)
 
-# Using wildcard to get all the records
-status, result, response, _ = conn.search('DC=bosch,DC=com', '(sAMAccountName=*)')
+# Find all records matching an attribute
+status, result, response, _ = connection.search(
+  "DC=bosch,DC=com", "(sAMAccountName=*)"
+)
 ```
